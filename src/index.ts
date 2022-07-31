@@ -1,7 +1,7 @@
 import express from 'express'
 import { dataSource } from './dataSource'
 import cors from 'cors'
-import { createUserRouter } from './controllers/userController'
+import { createUserRouter } from './routes/userRoute'
 
 const app = express()
 // * CORS Policy
@@ -15,8 +15,8 @@ const main = async () => {
     await dataSource.initialize()
     console.log('🟢 Connected successfully to Postgresql 🐘')
 
-    // * Add Middleware
-    app.use(createUserRouter)
+    // * Load Routes
+    app.use("/api/user",createUserRouter)
 
     app.listen(8080, () => {
       console.log('🟢 Server running at Port: 8080 🌐')

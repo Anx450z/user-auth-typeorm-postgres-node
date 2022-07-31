@@ -34,4 +34,14 @@ export class User extends BaseEntity {
 
   @UpdateDateColumn()
   updated_on: Date
+
+  @Column({
+    default: false
+  })
+  is_validated: boolean
+
+  @Column({
+    default: false
+  })
+  is_admin: boolean
 }
