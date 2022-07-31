@@ -27,7 +27,6 @@ export class User extends BaseEntity {
   email: string
 
   @Column()
-  @Length(8, 20)
   password: string
 
   @CreateDateColumn()
