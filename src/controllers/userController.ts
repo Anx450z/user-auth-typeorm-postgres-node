@@ -33,7 +33,20 @@ export class UserController {
           return res.send(errors)
         } else {
           await User.save(user)
-          return res.json(user)
+
+          const saved_user = await User.findOneBy({ email: email })
+          // Generate JWT token
+          const token = jwt.sign(
+            { userID: saved_user!.id },
+            process.env.JWT_SECRET_KEY as jwt.Secret,
+            { expiresIn: '5d' }
+          )
+
+          return res.status(201).send({
+            status:"success",
+            msg: "registration successful",
+            token: token
+          })
         }
       } catch (error) {
         res.send({
@@ -57,20 +70,20 @@ export class UserController {
 
       if (email && password) {
         const user = await User.findOneBy({ email: email })
-        if(user != null){
+        if (user != null) {
           const isMatch = await bcrypt.compare(password, user.password)
-          if(isMatch && user.email == email){
+          if (isMatch && user.email == email) {
             res.send({
               status: 'success',
               msg: 'login success',
             })
-          }else{
+          } else {
             res.send({
               status: 'failed',
               msg: 'email or password did not match',
             })
           }
-        }else{
+        } else {
           res.send({
             status: 'failed',
             msg: 'no user registered using this email',
