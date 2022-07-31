@@ -15,7 +15,7 @@ const main = async () => {
     await dataSource.initialize()
     console.log('🟢 Connected successfully to Postgresql 🐘')
 
-    // TODO: Add Middleware
+    // * Add Middleware
     app.use(createUserRouter)
 
     app.listen(8080, () => {
