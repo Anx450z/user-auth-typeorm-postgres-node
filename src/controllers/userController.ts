@@ -112,4 +112,28 @@ export class UserController {
       throw new Error('🔴 Something went wrong during login 🤔')
     }
   }
+
+  static changeUserPassword = async(req:any,res:any)=>{
+    const {password, passwordConfirmation} = req.body
+    if (password && passwordConfirmation){
+      if (password === passwordConfirmation){
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(password, salt)
+        res.send({
+          status: 'success',
+          msg: 'password changed successfully',
+        })
+      }else{
+        res.send({
+          status: 'failed',
+          msg: 'password are not same',
+        })
+      }
+    }else{
+      res.send({
+        status: 'failed',
+        msg: 'field must not be empty',
+      })
+    }
+  }
 }
