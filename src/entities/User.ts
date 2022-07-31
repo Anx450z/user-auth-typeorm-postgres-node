@@ -1,4 +1,4 @@
-import { PrimaryGeneratedColumn, Column, Entity, BaseEntity } from 'typeorm'
+import { PrimaryGeneratedColumn, Column, Entity, BaseEntity, CreateDateColumn, UpdateDateColumn } from 'typeorm'
 import { Length, IsEmail } from 'class-validator'
 
 @Entity('user_auth')
@@ -9,22 +9,30 @@ export class User extends BaseEntity {
   @Column({
     unique: true,
   })
-  @Length(6, 15)
+  @Length(3, 15)
   user_name: string
 
   @Column({})
-  @Length(6, 20)
+  @Length(3, 20)
   first_name: string
 
   @Column({})
-  @Length(6, 20)
+  @Length(3, 20)
   last_name: string
 
-  @Column({})
+  @Column({
+    unique: true
+  })
   @IsEmail()
   email: string
 
   @Column()
   @Length(8, 20)
   password: string
+
+  @CreateDateColumn()
+  created_on: Date
+
+  @UpdateDateColumn()
+  updated_on: Date
 }
