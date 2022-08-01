@@ -22,8 +22,12 @@ export var checkUserAuth = async (req: any, res: any, next: any) => {
         .select('user.id')
         .addSelect('user.email')
         .addSelect('user.first_name')
-        .addSelect('user.created_on')
         .addSelect('user.is_admin')
+        .addSelect('user.is_validated')
+        .addSelect('user.last_name')
+        .addSelect('user.user_name')
+        .addSelect('user.created_on')
+        .addSelect('user.updated_on')
         .where('id = :id', { id: userID })
         .getOne()
 

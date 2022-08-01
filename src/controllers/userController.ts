@@ -53,7 +53,7 @@ export class UserController {
           status: 'failed',
           msg: '🔴 Unable to register 📑',
         })
-        console.log('🔴 Something went wrong 🤔',error)
+        console.log('🔴 Something went wrong 🤔', error)
       }
     } else {
       return res.send({
@@ -106,8 +106,7 @@ export class UserController {
         status: 'failed',
         msg: 'unable to login',
       })
-      console.log(error)
-      // throw new Error('🔴 Something went wrong during login 🤔')
+      console.log('🔴 Something went wrong during login 🤔', error)
     }
   }
 
@@ -140,5 +139,10 @@ export class UserController {
         msg: 'field must not be empty',
       })
     }
+  }
+
+  static loggedUser = async(req:any, res:any) =>{
+    const { userName} = req.params
+    res.send({user: req.user})
   }
 }
