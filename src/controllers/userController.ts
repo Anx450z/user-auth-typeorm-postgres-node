@@ -3,6 +3,9 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { validate } from 'class-validator'
 import { dataSource } from '../dataSource'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 export class UserController {
   static userRegistration = async (req: any, res: any) => {
@@ -37,7 +40,7 @@ export class UserController {
           const saved_user = await User.findOneBy({ email: email })
           // Generate JWT token
           const token = jwt.sign(
-            { userID: saved_user!.id },
+            { userId: saved_user!.id },
             process.env.JWT_SECRET_KEY as jwt.Secret,
             { expiresIn: '5d' }
           )
@@ -74,7 +77,7 @@ export class UserController {
           if (isMatch && user.email == email) {
             // Generate JWT token
             const token = jwt.sign(
-              { userID: user!.id },
+              { userId: user!.id },
               process.env.JWT_SECRET_KEY as jwt.Secret,
               { expiresIn: '5d' }
             )
@@ -141,8 +144,85 @@ export class UserController {
     }
   }
 
-  static loggedUser = async(req:any, res:any) =>{
-    const { userName} = req.params
-    res.send({user: req.user})
+  static loggedUser = async (req: any, res: any) => {
+    res.send({ user: req.user })
+  }
+
+  static sendUserPasswordResetEmail = async (req: any, res: any) => {
+    const { email } = req.body
+    if (email) {
+      const user = await User.findOneBy({ email: email })
+      if (user) {
+        const secret = user!.id + process.env.JWT_SECRET_KEY!
+        const token = jwt.sign(
+          { userId: user!.id },
+          secret,
+          { expiresIn: '2h' }
+        )
+        // * front end link
+        const link = `http://localhost:3000/api/user/reset/${user.id}/${token}`
+        console.log(link)
+
+        // * React route will looks like this
+        // /api/user/reset/:user_name/:token
+
+        res.send({
+          status: 'success',
+          msg: 'email send, please check your email',
+        })
+      } else {
+        res.send({
+          status: 'failed',
+          msg: 'email does not exist',
+        })
+      }
+    } else {
+      res.send({
+        status: 'failed',
+        msg: 'email is required',
+      })
+    }
+  }
+
+  static userPasswordReset = async (req: any, res: any) => {
+    const { password, passwordConfirmation } = req.body
+    const { id, token } = req.params
+
+    const user = await User.findOneBy({ id: id })
+    const new_secret = user!.id + process.env.JWT_SECRET_KEY!
+    try {
+      jwt.verify(token, new_secret)
+      if (password && passwordConfirmation && user)  {
+        if (password === passwordConfirmation) {
+          const salt = await bcrypt.genSalt(10)
+          const newHashedPassword = await bcrypt.hash(password, salt)
+          await dataSource
+            .createQueryBuilder()
+            .update(User)
+            .set({ password: newHashedPassword })
+            .where('id = :id', { id: user.id })
+            .execute()
+          res.send({
+            status: 'success',
+            msg: 'password reset successfully',
+          })
+        } else {
+          res.send({
+            status: 'failed',
+            msg: 'password and confirm password did not match or user does not exist',
+          })
+        }
+      } else {
+        res.send({
+          status: 'failed',
+          msg: 'all are required',
+        })
+      }
+    } catch (error) {
+      res.send({
+        status: 'failed',
+        msg: 'invalid token',
+      })
+    }
   }
 }
