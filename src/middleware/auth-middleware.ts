@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken'
+import { dataSource } from '../dataSource'
 import { User } from '../entities/User'
 
 export var checkUserAuth = async (req: any, res: any, next: any) => {
@@ -16,7 +17,16 @@ export var checkUserAuth = async (req: any, res: any, next: any) => {
       ) as any
 
       // get user from token
-      req.user = await User.findOneBy({ id: userID })
+      req.user = await dataSource
+        .createQueryBuilder(User, 'user')
+        .select('user.id')
+        .addSelect('user.email')
+        .addSelect('user.first_name')
+        .addSelect('user.created_on')
+        .addSelect('user.is_admin')
+        .where('id = :id', { id: userID })
+        .getOne()
+
       next()
     } catch (error) {
       res.send({

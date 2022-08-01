@@ -44,7 +44,7 @@ export class UserController {
 
           return res.status(201).send({
             status: 'success',
-            msg: 'registration successful',
+            msg: 'registration successful👌',
             token: token,
           })
         }
@@ -53,8 +53,7 @@ export class UserController {
           status: 'failed',
           msg: '🔴 Unable to register 📑',
         })
-        console.log(error)
-        throw new Error('🔴 Something went wrong 🤔')
+        console.log('🔴 Something went wrong 🤔',error)
       }
     } else {
       return res.send({
@@ -108,7 +107,7 @@ export class UserController {
         msg: 'unable to login',
       })
       console.log(error)
-      throw new Error('🔴 Something went wrong during login 🤔')
+      // throw new Error('🔴 Something went wrong during login 🤔')
     }
   }
 
