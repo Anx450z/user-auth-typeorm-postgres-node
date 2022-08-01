@@ -162,13 +162,20 @@ export class UserController {
         )
         // * front end link
         const link = `http://localhost:3000/api/user/reset/${user.id}/${token}`
-        console.log(link)
+        // console.log(link)
         
         let email = {
           from: process.env.EMAIL_FROM,
           to: user.email,
-          subject: "Project : Password reset",
-          html: `<a href=${link}>Click here to reset your password</a>`
+          subject: "Project - Password reset",
+          html: 
+          `
+          <h1>Password Reset</h1>
+          <br>
+          <a href=${link}>Click here</a> to reset your password
+          <br>
+          or use this link : ${link}<br>
+          <P> Have a nice day! </p>`
         }
 
         await transporter.sendMail(email).catch(error => {
