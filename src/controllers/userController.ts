@@ -2,7 +2,7 @@ import { User } from '../entities/User'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { validate } from 'class-validator'
-import { Response, Request } from 'express'
+import { dataSource } from '../dataSource'
 
 export class UserController {
   static userRegistration = async (req: any, res: any) => {
@@ -43,9 +43,9 @@ export class UserController {
           )
 
           return res.status(201).send({
-            status:"success",
-            msg: "registration successful",
-            token: token
+            status: 'success',
+            msg: 'registration successful',
+            token: token,
           })
         }
       } catch (error) {
@@ -73,17 +73,16 @@ export class UserController {
         if (user != null) {
           const isMatch = await bcrypt.compare(password, user.password)
           if (isMatch && user.email == email) {
-
-             // Generate JWT token
-          const token = jwt.sign(
-            { userID: user!.id },
-            process.env.JWT_SECRET_KEY as jwt.Secret,
-            { expiresIn: '5d' }
-          )
+            // Generate JWT token
+            const token = jwt.sign(
+              { userID: user!.id },
+              process.env.JWT_SECRET_KEY as jwt.Secret,
+              { expiresIn: '5d' }
+            )
             res.send({
               status: 'success',
               msg: 'login success',
-              token: token
+              token: token,
             })
           } else {
             res.send({
@@ -113,23 +112,30 @@ export class UserController {
     }
   }
 
-  static changeUserPassword = async(req:any,res:any)=>{
-    const {password, passwordConfirmation} = req.body
-    if (password && passwordConfirmation){
-      if (password === passwordConfirmation){
+  static changeUserPassword = async (req: any, res: any) => {
+    const { password, passwordConfirmation } = req.body
+    if (password && passwordConfirmation) {
+      if (password === passwordConfirmation) {
         const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(password, salt)
+        await dataSource
+          .createQueryBuilder()
+          .update(User)
+          .set({ password: hashedPassword })
+          .where('id = :id', { id: req.user.id })
+          .execute()
+
         res.send({
           status: 'success',
           msg: 'password changed successfully',
         })
-      }else{
+      } else {
         res.send({
           status: 'failed',
           msg: 'password are not same',
         })
       }
-    }else{
+    } else {
       res.send({
         status: 'failed',
         msg: 'field must not be empty',

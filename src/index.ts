@@ -2,7 +2,9 @@ import express from 'express'
 import { dataSource } from './dataSource'
 import cors from 'cors'
 import { createUserRouter } from './routes/userRoute'
+import dotenv from 'dotenv'
 
+dotenv.config()
 const app = express()
 // * CORS Policy
 app.use(cors())
@@ -18,8 +20,8 @@ const main = async () => {
     // * Load Routes
     app.use("/api/user",createUserRouter)
 
-    app.listen(8080, () => {
-      console.log('🟢 Server running at Port: 8080 🌐')
+    app.listen(process.env.SERVER, () => {
+      console.log('🟢 Server running at configured port 🌐')
     })
   } catch (error) {
     console.log(error)

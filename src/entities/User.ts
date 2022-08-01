@@ -1,4 +1,4 @@
-import { PrimaryGeneratedColumn, Column, Entity, BaseEntity, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import { PrimaryGeneratedColumn, Column, Entity, BaseEntity, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm'
 import { Length, IsEmail } from 'class-validator'
 
 @Entity('user_auth')
@@ -20,6 +20,7 @@ export class User extends BaseEntity {
   @Length(3, 20)
   last_name: string
 
+  @Index()
   @Column({
     unique: true
   })
