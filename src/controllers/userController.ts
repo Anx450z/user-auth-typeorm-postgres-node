@@ -46,9 +46,30 @@ export class UserController {
             { expiresIn: '5d' }
           )
 
+          // Sending email validation mail
+          // * front end link
+          const link = `http://localhost:3000/api/user/validate/${saved_user!.id}/${token}`
+          
+          let validate_email = {
+            from: process.env.EMAIL_FROM,
+            to: user.email,
+            subject: 'Project - Password reset',
+            html: `
+            <h1>Validate Email</h1>
+            <br>
+            <a href=${link}>Click here</a> to validate you email
+            <br>
+            or use this link : ${link}<br>
+            <P> Have a nice day! </p>`,
+          }
+
+          await transporter.sendMail(validate_email).catch(error => {
+            console.log(error)
+          })
           return res.status(201).send({
             status: 'success',
             msg: 'registration successful👌',
+            valid: 'please validate your email to login',
             token: token,
           })
         }
@@ -75,7 +96,7 @@ export class UserController {
         const user = await User.findOneBy({ email: email })
         if (user != null) {
           const isMatch = await bcrypt.compare(password, user.password)
-          if (isMatch && user.email == email) {
+          if (isMatch && user.is_validated && user.email == email) {
             // Generate JWT token
             const token = jwt.sign(
               { userId: user!.id },
@@ -90,7 +111,7 @@ export class UserController {
           } else {
             res.send({
               status: 'failed',
-              msg: 'email or password did not match',
+              msg: 'email or password did not match or user not validated',
             })
           }
         } else {
@@ -155,40 +176,37 @@ export class UserController {
       const user = await User.findOneBy({ email: email })
       if (user) {
         const secret = user!.id + process.env.JWT_SECRET_KEY!
-        const token = jwt.sign(
-          { userId: user!.id },
-          secret,
-          { expiresIn: '2h' }
-        )
+        const token = jwt.sign({ userId: user!.id }, secret, {
+          expiresIn: '2h',
+        })
         // * front end link
         const link = `http://localhost:3000/api/user/reset/${user.id}/${token}`
         // console.log(link)
-        
+
         let email = {
           from: process.env.EMAIL_FROM,
           to: user.email,
-          subject: "Project - Password reset",
-          html: 
-          `
+          subject: 'Project - Password reset',
+          html: `
           <h1>Password Reset</h1>
           <br>
           <a href=${link}>Click here</a> to reset your password
           <br>
           or use this link : ${link}<br>
-          <P> Have a nice day! </p>`
+          <P> Have a nice day! </p>`,
         }
 
         await transporter.sendMail(email).catch(error => {
           console.log(error)
-        });
-        
+        })
+
         // * React route will looks like this
         // /api/user/reset/:user_name/:token
 
         res.send({
           status: 'success',
           msg: 'email send, please check your email',
-          info: email
+          info: email,
         })
       } else {
         res.send({
@@ -212,7 +230,7 @@ export class UserController {
     const new_secret = user!.id + process.env.JWT_SECRET_KEY!
     try {
       jwt.verify(token, new_secret)
-      if (password && passwordConfirmation && user)  {
+      if (password && passwordConfirmation && user) {
         if (password === passwordConfirmation) {
           const salt = await bcrypt.genSalt(10)
           const newHashedPassword = await bcrypt.hash(password, salt)
