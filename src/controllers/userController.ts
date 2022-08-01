@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import { validate } from 'class-validator'
 import { dataSource } from '../dataSource'
 import dotenv from 'dotenv'
+import { transporter } from '../config/emailConfig'
 
 dotenv.config()
 
@@ -162,13 +163,25 @@ export class UserController {
         // * front end link
         const link = `http://localhost:3000/api/user/reset/${user.id}/${token}`
         console.log(link)
+        
+        let email = {
+          from: process.env.EMAIL_FROM,
+          to: user.email,
+          subject: "Project : Password reset",
+          html: `<a href=${link}>Click here to reset your password</a>`
+        }
 
+        await transporter.sendMail(email).catch(error => {
+          console.log(error)
+        });
+        
         // * React route will looks like this
         // /api/user/reset/:user_name/:token
 
         res.send({
           status: 'success',
           msg: 'email send, please check your email',
+          info: email
         })
       } else {
         res.send({
