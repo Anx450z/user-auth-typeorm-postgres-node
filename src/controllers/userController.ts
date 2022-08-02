@@ -149,6 +149,10 @@ export class UserController {
     res.send({ user: req.user })
   }
 
+  static logoutUser = async (req:any, res: any, next: any) => {
+    res.send({ user: req.user , msg: "logged out"})
+  }
+
   static sendUserPasswordResetEmail = async (req: any, res: any) => {
     const { email } = req.body
     if (email) {

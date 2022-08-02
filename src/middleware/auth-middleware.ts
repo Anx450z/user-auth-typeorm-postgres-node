@@ -11,7 +11,7 @@ export var checkUserAuth = async (req: any, res: any, next: any) => {
       token = authorization.split(' ')[1]
 
       // Verify Token
-      const { userID } = jwt.verify(
+      const { userId } = jwt.verify(
         token,
         process.env.JWT_SECRET_KEY as jwt.Secret
       ) as any
@@ -28,7 +28,7 @@ export var checkUserAuth = async (req: any, res: any, next: any) => {
         .addSelect('user.user_name')
         .addSelect('user.created_on')
         .addSelect('user.updated_on')
-        .where('id = :id', { id: userID })
+        .where('id = :id', { id: userId })
         .getOne()
 
       next()
