@@ -1,6 +1,7 @@
 import passport from 'passport'
 import passportLocal from 'passport-local'
 import { User } from '../entities/User'
+import bcrypt from 'bcrypt'
 
 const LocalStrategy = passportLocal.Strategy
 
@@ -10,8 +11,22 @@ function initialize(passport: any) {
 
   passport.use(
     new LocalStrategy(async (email: string, password: string, done) => {
-      const user = await User.findOneBy({email: email})
-      
+      try {
+        const user = await User.findOneBy({ email: email })
+
+        if (!user) return done(null, false)
+        bcrypt.compare(password, user.password, (err, result: boolean) => {
+          if (err) throw err
+          if (result === true) {
+            return done(null, user)
+          } else {
+            return done(null, false)
+          }
+        })
+      } catch (error) {
+        console.log(error)
+        throw error
+      }
     })
   )
 
@@ -20,19 +35,20 @@ function initialize(passport: any) {
   })
 
   passport.deserializeUser(async (id: number, cb: any) => {
+    let userInformation, err
     try {
       const user = await User.findOneBy({ id: id })
       if (user != null) {
-        const userInformation = {
+        userInformation = {
           email: user.email,
           userId: user.id,
           isAdmin: user?.is_admin,
         }
-        cb(userInformation)
       }
     } catch (error) {
-      cb(error)
+      err = error
     }
+    cb(err, userInformation)
   })
 }
 
