@@ -3,9 +3,9 @@ import { dataSource } from './dataSource'
 import cors from 'cors'
 import { createUserRouter } from './routes/userRoute'
 import dotenv from 'dotenv'
+import { initialize } from '../src/config/passportConfig'
+import session from 'express-session'
 import passport from 'passport'
-import { initializePassportConfig } from "../src/config/passportConfig"
-
 
 dotenv.config()
 const app = express()
@@ -15,15 +15,25 @@ app.use(cors())
 // * JSON : req.body
 app.use(express.json())
 
+initialize(passport)
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET as string,
+    resave: false,
+    saveUninitialized: false,
+  })
+)
+app.use(passport.initialize())
+app.use(passport.session())
+
 const main = async () => {
   try {
     await dataSource.initialize()
     console.log('🟢 Connected successfully to Postgresql 🐘')
 
-    app.use(initializePassportConfig)
-
     // * Load Routes
-    app.use("/api/user",createUserRouter)
+    app.use('/api/user', createUserRouter)
 
     app.listen(process.env.SERVER, () => {
       console.log('🟢 Server running at configured port 🌐')

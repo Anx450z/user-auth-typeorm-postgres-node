@@ -87,9 +87,14 @@ export class UserController {
       })
     }
   }
+  static passportLogin = async (req: any, res: any)=> {
+    res.send({
+      status : "success",
+      mdg: "login by passport successfully"
+    })
+  }
 
   static userLogin = async (req: any, res: any) => {
-    
     try {
       const { email, password } = req.body
 

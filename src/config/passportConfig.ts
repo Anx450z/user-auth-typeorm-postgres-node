@@ -1,13 +1,10 @@
-import passport from 'passport'
 import passportLocal from 'passport-local'
 import { User } from '../entities/User'
 import bcrypt from 'bcrypt'
 
 const LocalStrategy = passportLocal.Strategy
 
-function initialize(passport: any) {
-  passport.initialize()
-  passport.session()
+export function initialize(passport: any) {
 
   passport.use(
     new LocalStrategy(async (email: string, password: string, done) => {
@@ -51,5 +48,3 @@ function initialize(passport: any) {
     cb(err, userInformation)
   })
 }
-
-export { initialize as initializePassportConfig }
