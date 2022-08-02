@@ -89,6 +89,7 @@ export class UserController {
   }
 
   static userLogin = async (req: any, res: any) => {
+    
     try {
       const { email, password } = req.body
 

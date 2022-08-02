@@ -3,6 +3,9 @@ import { dataSource } from './dataSource'
 import cors from 'cors'
 import { createUserRouter } from './routes/userRoute'
 import dotenv from 'dotenv'
+import passport from 'passport'
+import { initializePassportConfig } from "../src/config/passportConfig"
+
 
 dotenv.config()
 const app = express()
@@ -16,6 +19,8 @@ const main = async () => {
   try {
     await dataSource.initialize()
     console.log('🟢 Connected successfully to Postgresql 🐘')
+
+    app.use(initializePassportConfig)
 
     // * Load Routes
     app.use("/api/user",createUserRouter)
