@@ -50,20 +50,20 @@ export class UserController {
           // * front end link
           const link = `http://localhost:3000/api/user/validate/${saved_user!.id}/${token}`
           
-          let validate_email = {
+          let verify_email = {
             from: process.env.EMAIL_FROM,
             to: user.email,
             subject: 'Project - Password reset',
             html: `
             <h1>Validate Email</h1>
             <br>
-            <a href=${link}>Click here</a> to validate you email
+            <a href=${link}>Click here</a> to verify you email
             <br>
             or use this link : ${link}<br>
             <P> Have a nice day! </p>`,
           }
 
-          await transporter.sendMail(validate_email).catch(error => {
+          await transporter.sendMail(verify_email).catch(error => {
             console.log(error)
           })
           return res.status(201).send({
