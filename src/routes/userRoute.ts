@@ -6,7 +6,6 @@ const router = express.Router()
 // Route level Middleware - To Protect Route
 router.use('/change-password', checkUserAuth)
 router.use('/logged-user', checkUserAuth)
-router.use('/logout', checkUserAuth)
 
 // Public Route
 router.post('/register', UserController.userRegistration)
@@ -17,6 +16,5 @@ router.post('/user-password-reset/:id/:token', UserController.userPasswordReset)
 // Protected Route
 router.post('/change-password', UserController.changeUserPassword)
 router.get('/logged-user', UserController.loggedUser)
-router.delete('/logout', UserController.logoutUser)
 
 export { router as createUserRouter }

@@ -25,11 +25,11 @@ export class UserController {
         const hashedPassword = await bcrypt.hash(password, salt)
 
         const user = new User()
-        user.first_name = firstName
-        user.user_name = userName
-        user.last_name = lastName
+        user.first_name = firstName.toLowerCase()
+        user.user_name = userName.toLowerCase()
+        user.last_name = lastName.toLowerCase()
         user.password = hashedPassword
-        user.email = email
+        user.email = email.toLowerCase()
 
         const errors = await validate(user)
 
@@ -48,16 +48,16 @@ export class UserController {
 
           return res.status(201).send({
             status: 'success',
-            msg: 'registration successful👌',
+            msg: 'registration successful',
             token: token,
           })
         }
       } catch (error) {
         res.send({
           status: 'failed',
-          msg: '🔴 Unable to register 📑',
+          msg: 'Unable to register ',
         })
-        console.log('🔴 Something went wrong 🤔', error)
+        console.log('Something went wrong ', error)
       }
     } else {
       return res.send({
@@ -72,7 +72,7 @@ export class UserController {
       const { email, password } = req.body
 
       if (email && password) {
-        const user = await User.findOneBy({ email: email })
+        const user = await User.findOneBy({ email: email.toLowerCase() })
         if (user != null) {
           const isMatch = await bcrypt.compare(password, user.password)
           if (isMatch && user.email == email) {
@@ -110,7 +110,7 @@ export class UserController {
         status: 'failed',
         msg: 'unable to login',
       })
-      console.log('🔴 Something went wrong during login 🤔', error)
+      console.log('Something went wrong during login ', error)
     }
   }
 
@@ -147,10 +147,6 @@ export class UserController {
 
   static loggedUser = async (req: any, res: any) => {
     res.send({ user: req.user })
-  }
-
-  static logoutUser = async (req:any, res: any, next: any) => {
-    res.send({ user: req.user , msg: "logged out"})
   }
 
   static sendUserPasswordResetEmail = async (req: any, res: any) => {

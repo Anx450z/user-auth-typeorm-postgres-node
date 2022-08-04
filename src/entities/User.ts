@@ -20,10 +20,10 @@ export class User extends BaseEntity {
   @Length(3, 20)
   last_name: string
 
-  @Index()
   @Column({
     unique: true
   })
+  @Index()
   @IsEmail()
   email: string
 
