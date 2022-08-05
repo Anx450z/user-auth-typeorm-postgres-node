@@ -9,7 +9,6 @@ export var checkUserAuth = async (req: any, res: any, next: any) => {
     try {
       // Getting token from header
       token = authorization.split(' ')[1]
-
       // Verify Token
       const { userId } = jwt.verify(
         token,
