@@ -22,7 +22,7 @@ export var checkUserAuth = async (req: any, res: any, next: any) => {
         .addSelect('user.email')
         .addSelect('user.first_name')
         .addSelect('user.is_admin')
-        .addSelect('user.is_validated')
+        .addSelect('user.email_verified')
         .addSelect('user.last_name')
         .addSelect('user.user_name')
         .addSelect('user.created_on')

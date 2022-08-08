@@ -43,26 +43,47 @@ export class UserController {
           const token = jwt.sign(
             { userId: saved_user!.id },
             process.env.JWT_SECRET_KEY as jwt.Secret,
-            { expiresIn: '5d' }
+            { expiresIn: '2w' }
           )
+          // * front end link
+          const link = `http://localhost:3000/api/user/verify/${user.id}/${token}`
 
-          return res.status(201).send({
+          let email_verification = {
+            from: process.env.EMAIL_FROM,
+            to: user.email,
+            subject: 'Project - Email verification',
+            html: `
+              <h1>Email Verification</h1>
+              <br>
+              <a href=${link}>Click here</a> to verify your email
+              <br>
+              or use this link : ${link}<br>
+              <P> Have a nice day! </p>`,
+          }
+
+          await transporter.sendMail(email_verification).catch(error => {
+            console.log(error)
+          })
+
+          // * React route will looks like this
+          // /api/user/verify/:id/:token
+
+          res.send({
             status: 'success',
-            msg: 'registration successful',
-            token: token,
+            msg: 'email send, please check your email',
+            info: email_verification,
           })
         }
       } catch (error) {
         res.send({
           status: 'failed',
-          msg: 'Unable to register ',
+          msg: 'unable to register user',
         })
-        console.log('Something went wrong ', error)
       }
     } else {
       return res.send({
         status: 'failed',
-        msg: 'Password did not match',
+        msg: 'password and confirm password did not match',
       })
     }
   }
@@ -73,20 +94,27 @@ export class UserController {
 
       if (email && password) {
         const user = await User.findOneBy({ email: email.toLowerCase() })
-        if (user != null) {
+        if (user !== null) {
           const isMatch = await bcrypt.compare(password, user.password)
-          if (isMatch && user.email == email) {
-            // Generate JWT token
-            const token = jwt.sign(
-              { userId: user!.id },
-              process.env.JWT_SECRET_KEY as jwt.Secret,
-              { expiresIn: '5d' }
-            )
-            res.send({
-              status: 'success',
-              msg: 'login success',
-              token: token,
-            })
+          if (isMatch && user.email === email) {
+            if (user.email_verified === true) {
+              // Generate JWT token
+              const token = jwt.sign(
+                { userId: user!.id },
+                process.env.JWT_SECRET_KEY as jwt.Secret,
+                { expiresIn: '5d' }
+              )
+              res.send({
+                status: 'success',
+                msg: 'login success',
+                token: token,
+              })
+            } else {
+              res.send({
+                status: 'failed',
+                msg: 'please verify your email',
+              })
+            }
           } else {
             res.send({
               status: 'failed',
@@ -102,7 +130,7 @@ export class UserController {
       } else {
         res.send({
           status: 'failed',
-          msg: 'field must not be empty',
+          msg: 'all field are required',
         })
       }
     } catch (error) {
@@ -110,7 +138,6 @@ export class UserController {
         status: 'failed',
         msg: 'unable to login',
       })
-      console.log('Something went wrong during login ', error)
     }
   }
 
@@ -155,40 +182,36 @@ export class UserController {
       const user = await User.findOneBy({ email: email })
       if (user) {
         const secret = user!.id + process.env.JWT_SECRET_KEY!
-        const token = jwt.sign(
-          { userId: user!.id },
-          secret,
-          { expiresIn: '2h' }
-        )
+        const token = jwt.sign({ userId: user!.id }, secret, {
+          expiresIn: '2h',
+        })
         // * front end link
         const link = `http://localhost:3000/api/user/reset/${user.id}/${token}`
-        // console.log(link)
-        
+
         let email = {
           from: process.env.EMAIL_FROM,
           to: user.email,
-          subject: "Project - Password reset",
-          html: 
-          `
+          subject: 'Project - Password reset',
+          html: `
           <h1>Password Reset</h1>
           <br>
           <a href=${link}>Click here</a> to reset your password
           <br>
           or use this link : ${link}<br>
-          <P> Have a nice day! </p>`
+          <P> Have a nice day! </p>`,
         }
 
         await transporter.sendMail(email).catch(error => {
           console.log(error)
-        });
-        
+        })
+
         // * React route will looks like this
-        // /api/user/reset/:user_name/:token
+        // /api/user/reset/:id/:token
 
         res.send({
           status: 'success',
           msg: 'email send, please check your email',
-          info: email
+          info: email,
         })
       } else {
         res.send({
@@ -212,7 +235,7 @@ export class UserController {
     const new_secret = user!.id + process.env.JWT_SECRET_KEY!
     try {
       jwt.verify(token, new_secret)
-      if (password && passwordConfirmation && user)  {
+      if (password && passwordConfirmation && user) {
         if (password === passwordConfirmation) {
           const salt = await bcrypt.genSalt(10)
           const newHashedPassword = await bcrypt.hash(password, salt)
@@ -244,5 +267,78 @@ export class UserController {
         msg: 'invalid token',
       })
     }
+  }
+
+  static userEmailVerification = async (req: any, res: any) => {
+    const { id, token } = req.params
+
+    const user = await User.findOneBy({ id: id })
+    if (user !== null) {
+      const new_secret = user!.id + process.env.JWT_SECRET_KEY!
+      try {
+        jwt.verify(token, new_secret)
+        const salt = await bcrypt.genSalt(10)
+        await dataSource
+          .createQueryBuilder()
+          .update(User)
+          .set({ email_verified: true })
+          .where('id = :id', { id: user.id })
+          .execute()
+        res.send({
+          status: 'success',
+          msg: 'email verified successfully',
+        })
+      } catch (error) {
+        res.send({
+          status: 'failed',
+          msg: 'invalid token',
+        })
+      }
+    }
+  }
+
+  static sendUserEmailVerification = async (req: any, res: any) => {
+   
+      if (req.user !== null) {
+         // Generate JWT token
+         const token = jwt.sign(
+          { userId: req.user.id },
+          process.env.JWT_SECRET_KEY as jwt.Secret,
+          { expiresIn: '2w' }
+        )
+        // * front end link
+        const link = `http://localhost:3000/api/user/verify/${req.user.id}/${token}`
+
+        let email_verification = {
+          from: process.env.EMAIL_FROM,
+          to: req.user.email,
+          subject: 'Project - Email verification',
+          html: `
+          <h1>Email Verification</h1>
+          <br>
+          <a href=${link}>Click here</a> to verify your email
+          <br>
+          or use this link : ${link}<br>
+          <P> Have a nice day! </p>`,
+        }
+
+        await transporter.sendMail(email_verification).catch(error => {
+          console.log(error)
+        })
+
+        // * React route will looks like this
+        // /api/user/verify/:id/:token
+        res.send({
+          status: 'success',
+          msg: 'email send, please check your email',
+          info: email_verification,
+        })
+      } else {
+        res.send({
+          status: 'failed',
+          msg: 'user does not exist',
+        })
+      }
+    
   }
 }

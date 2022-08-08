@@ -41,7 +41,7 @@ export class User extends BaseEntity {
   @Column({
     default: false
   })
-  is_validated: boolean
+  email_verified: boolean
 
   @Column({
     default: false
