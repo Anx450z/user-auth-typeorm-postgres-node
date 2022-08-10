@@ -14,5 +14,5 @@ export const dataSource = new DataSource({
   // * Add additional entities below
   entities: [User],
   // * Automatic Migration below
-  synchronize: true,
+  synchronize: false,
 })
